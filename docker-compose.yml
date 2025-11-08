@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: backend_db
+    environment:
+      POSTGRES_USER: hr
+      POSTGRES_PASSWORD: hrpass
+      POSTGRES_DB: hrdb
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hr"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    container_name: backend_app
+    build: .
+    command: npm run start
+    ports:
+      - "3060:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+volumes:
+  pgdata:
